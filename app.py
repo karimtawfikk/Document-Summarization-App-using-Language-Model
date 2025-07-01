@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from transformers import pipeline
 import torch
 import base64
+import os
 
 #Model & Tokenizer
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
@@ -52,6 +53,7 @@ def displayPDF(file):
 st.set_page_config(layout="wide", page_title="Summarization App")
 
 def main():
+    os.makedirs("data", exist_ok=True)
     st.title("Document Summarization App using Language Model")
 
     uploaded_file = st.file_uploader("Upload your PDF File", type=["pdf"])
@@ -60,6 +62,9 @@ def main():
         if st.button("Summarize"):
             col1, col2 = st.columns(2)
             filepath = "data/" + uploaded_file.name
+
+            with open(filepath, "wb") as temp_file:
+                temp_file.write(uploaded_file.read())
             
             with col1:
                 st.info("Uploaded PDF File")
