@@ -1,0 +1,7 @@
+streamlit>=1.34.0
+transformers>=4.41.2
+torch>=2.6.0
+langchain==0.2.1
+pypdf>=3.0.1
+pdfminer.six>=20221105
+safetensors>=0.4.3
