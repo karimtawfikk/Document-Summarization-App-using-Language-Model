@@ -22,7 +22,7 @@ def llm_pipeline(filepath):
         "summarization",
         model=base_model,
         tokenizer=tokenizer,
-        max_length=40, #set to small since summarizing chuncks not the entire text
+        max_length=30, #set to small since summarizing chuncks not the entire text
         min_length=15
     )
 
@@ -43,11 +43,18 @@ def llm_pipeline(filepath):
 
 #Display PDF Function
 @st.cache_data
-def displayPDF(file):
-    with open(file, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
-        st.markdown(pdf_display, unsafe_allow_html=True)
+def get_pdf_base64(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+def displayPDF(file_path):
+    with open(file_path, "rb") as f:
+        st.download_button(
+            label="📄 Download Uploaded PDF",
+            data=f,
+            file_name=os.path.basename(file_path),
+            mime="application/pdf"
+        )
 
 #Streamlit code
 st.set_page_config(layout="wide", page_title="Summarization App")
