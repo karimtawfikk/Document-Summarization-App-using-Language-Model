@@ -9,35 +9,30 @@ import base64
 #Model & Tokenizer
 checkpoint = "LaMini-Flan-T5-248M"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(device)
 
 
 #Summarization Pipeline
 def llm_pipeline(filepath):
-    pipe_sum = pipeline(
-        "summarization",
-        model=base_model,
-        tokenizer=tokenizer,
-        max_length=40, #set to small since summarizing chuncks not the entire text
-        min_length=15
-    )
-
     loader = PyPDFLoader(filepath)
     pages = loader.load_and_split()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)  #each chunk 400 chars, each chunk will overlap the previous one by 50 characters
+    chunks = text_splitter.split_documents(pages) #splits into small chuncks in each page
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50) #each chunk 400 chars, each chunk will overlap the previous one by 50 characters
-    chunks = text_splitter.split_documents(pages) #splits into small chuncks in each page 
+    inputs = [chunk.page_content for chunk in chunks]
+    inputs_tokenized = tokenizer(inputs, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
 
-    all_summaries = []
-    for chunk in chunks:
-        input_text = chunk.page_content
-        result = pipe_sum(input_text)[0]['summary_text']
-        all_summaries.append(result)
+    summaries = base_model.generate(
+        **inputs_tokenized,
+        max_length=35,
+        min_length=15,
+        num_beams=4
+    )
 
-    final_summary = " ".join(all_summaries)
-    return final_summary
+    decoded = tokenizer.batch_decode(summaries, skip_special_tokens=True)
+    return " ".join(decoded)
+
 
 #Display PDF Function
 @st.cache_data
