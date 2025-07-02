@@ -48,13 +48,13 @@ def get_pdf_base64(file_path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 def displayPDF(file_path):
-    with open(file_path, "rb") as f:
-        st.download_button(
-            label="📄 Download Uploaded PDF",
-            data=f,
-            file_name=os.path.basename(file_path),
-            mime="application/pdf"
-        )
+    base64_pdf = get_pdf_base64(file_path)
+
+    pdf_display = f"""
+    <iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>
+    """
+
+    st.markdown(pdf_display, unsafe_allow_html=True)
 
 #Streamlit code
 st.set_page_config(layout="wide", page_title="Summarization App")
