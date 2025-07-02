@@ -84,27 +84,39 @@ def llm_pipeline(filepath):
         logger.error(f"Summarization error: {str(e)}")
         return f"Error in summarization: {str(e)}"
 
-# Display PDF Function
+# Cache only the base64 encoding
 @st.cache_data
-def displayPDF(file_path):
+def get_pdf_base64(file_path):
     try:
         with open(file_path, "rb") as f:
-            pdf_data = f.read()
-            base64_pdf = base64.b64encode(pdf_data).decode("utf-8")
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+        return base64_pdf
+    except Exception as e:
+        logger.error(f"Error encoding PDF to base64: {str(e)}")
+        return None
+
+# Display PDF Function (no widgets in cached function)
+def displayPDF(file_path):
+    try:
+        base64_pdf = get_pdf_base64(file_path)
+        if base64_pdf:
             st.write(f"Base64 string length: {len(base64_pdf)}")
             logger.info(f"Base64 string length: {len(base64_pdf)}")
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
             st.markdown(pdf_display, unsafe_allow_html=True)
-        with open(file_path, "rb") as f:
-            st.download_button(
-                label="📄 Download PDF",
-                data=f,
-                file_name=os.path.basename(file_path),
-                mime="application/pdf",
-            )
+        else:
+            st.error("Failed to encode PDF to base64")
     except Exception as e:
         st.error(f"Error displaying PDF: {str(e)}")
         logger.error(f"PDF display error: {str(e)}")
+    # Move widget outside cached function
+    with open(file_path, "rb") as f:
+        st.download_button(
+            label="📄 Download PDF",
+            data=f,
+            file_name=os.path.basename(file_path),
+            mime="application/pdf",
+        )
 
 # Streamlit code
 st.set_page_config(layout="wide", page_title="Summarization App")
