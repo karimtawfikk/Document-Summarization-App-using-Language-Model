@@ -1,3 +1,6 @@
+import os
+os.environ["TRANSFORMERS_NO_ACCELERATE"] = "1"
+
 import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from langchain.document_loaders import PyPDFLoader,  DirectoryLoader
