@@ -15,7 +15,7 @@ checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,torch_dtype=torch.float32,low_cpu_mem_usage=False)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,torch_dtype=torch.float32,low_cpu_mem_usage=False).to("cpu")
 
 
 #Summarization Pipeline
