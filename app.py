@@ -18,7 +18,7 @@ checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,device_map=None,torch_dtype=None,low_cpu_mem_usage=False,)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,device_map=None,low_cpu_mem_usage=False,)
 
 st.write("Model is on device:", next(base_model.parameters()).device)
 
