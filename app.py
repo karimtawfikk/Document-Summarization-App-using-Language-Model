@@ -15,7 +15,7 @@ checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,torch_dtype=torch.float32,low_cpu_mem_usage=False)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,torch_dtype=torch.float32,low_cpu_mem_usage=False).to("cpu")
 
 
 #Summarization Pipeline
@@ -26,7 +26,7 @@ def llm_pipeline(filepath):
         tokenizer=tokenizer,
         max_length=30, #set to small since summarizing chuncks not the entire text
         min_length=15,
-        device=0 if torch.cuda.is_available() else -1
+        device= -1
     )
 
     loader = PyPDFLoader(filepath)
@@ -51,13 +51,18 @@ def get_pdf_base64(file_path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 def displayPDF(file_path):
-    with open(file_path, "rb") as f:
+    '''with open(file_path, "rb") as f:
         st.download_button(
             label="📄 Download Uploaded PDF",
             data=f,
             file_name=os.path.basename(file_path),
             mime="application/pdf"
-        )
+        )'''
+    with open(file_path, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+        st.markdown(pdf_display, unsafe_allow_html=True)
+
 
 #Streamlit code
 st.set_page_config(layout="wide", page_title="Summarization App")
