@@ -12,7 +12,7 @@ import transformers
 import langchain
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Create data directory
@@ -47,8 +47,8 @@ def llm_pipeline(filepath):
             max_length=100,  # Increased for better summaries
             min_length=15,
             device=0 if torch.cuda.is_available() else -1,
-            do_sample=False,  # Prevent random outputs
-            num_beams=4,  # Improve summary quality
+            do_sample=False,
+            num_beams=4,
         )
 
         loader = PyPDFLoader(filepath)
@@ -65,8 +65,8 @@ def llm_pipeline(filepath):
         for i, chunk in enumerate(chunks):
             input_text = chunk.page_content.strip()
             logger.info(f"Chunk {i+1} content: {input_text[:100]}...")
-            if not input_text or len(input_text.split()) < 5:
-                logger.warning(f"Chunk {i+1} is empty or too short, skipping")
+            if not input_text or len(input_text.split()) < 5 or input_text.lower().startswith("the the"):
+                logger.warning(f"Chunk {i+1} is empty, too short, or repetitive, skipping")
                 continue
             try:
                 result = pipe_sum(input_text)[0]["summary_text"]
@@ -89,7 +89,8 @@ def llm_pipeline(filepath):
 def displayPDF(file_path):
     try:
         with open(file_path, "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_data = f.read()
+            base64_pdf = base64.b64encode(pdf_data).decode("utf-8")
             st.write(f"Base64 string length: {len(base64_pdf)}")
             logger.info(f"Base64 string length: {len(base64_pdf)}")
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
