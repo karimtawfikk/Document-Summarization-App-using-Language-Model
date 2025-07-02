@@ -10,10 +10,13 @@ import os
 
 #Model & Tokenizer
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(device)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint
+                                                   device_map="auto",            
+                                                   torch_dtype="auto"
+                                                  )
 
 
 #Summarization Pipeline
