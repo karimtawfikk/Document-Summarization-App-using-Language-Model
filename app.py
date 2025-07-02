@@ -15,7 +15,10 @@ checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,device_map=None)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,device_map=None,torch_dtype=None)
+
+print("Model is on device:", next(base_model.parameters()).device)
+
 
 
 #Summarization Pipeline
