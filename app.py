@@ -1,6 +1,7 @@
 import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyPDFLoader,  DirectoryLoader
+#from langchain.document_loaders import PyPDFLoader,  DirectoryLoader
+from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain.chains.summarize import load_summarize_chain
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from transformers import pipeline
@@ -11,9 +12,10 @@ import os
 #Model & Tokenizer
 checkpoint = "MBZUAI/LaMini-Flan-T5-248M"
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,device_map="auto",torch_dtype=torch.float32)
+base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint,torch_dtype=torch.float32).to(device)
 
 
 #Summarization Pipeline
@@ -23,7 +25,8 @@ def llm_pipeline(filepath):
         model=base_model,
         tokenizer=tokenizer,
         max_length=30, #set to small since summarizing chuncks not the entire text
-        min_length=15
+        min_length=15,
+        device=0 if torch.cuda.is_available() else -1
     )
 
     loader = PyPDFLoader(filepath)
