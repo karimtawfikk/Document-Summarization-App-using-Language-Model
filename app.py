@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
@@ -60,6 +61,11 @@ def main():
     if uploaded_file is not None:
         if st.button("Summarize"):
             col1, col2 = st.columns(2)
+            filepath = "data/" + uploaded_file.name
+
+            os.makedirs("data", exist_ok=True)
+            with open(filepath, "wb") as temp_file:
+                temp_file.write(uploaded_file.read())
             
             with col1:
                 st.info("Uploaded PDF File")
