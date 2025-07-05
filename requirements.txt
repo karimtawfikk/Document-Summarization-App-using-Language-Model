@@ -6,3 +6,4 @@ pypdf>=3.0.1
 pdfminer.six>=20221105
 safetensors>=0.4.3
 langchain-community
+PyPDF2
