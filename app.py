@@ -2,39 +2,47 @@ import streamlit as st
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from transformers import pipeline
 import torch
 import base64
 
-#Model & Tokenizer
-checkpoint = "LaMini-Flan-T5-248M"
+checkpoint = "facebook/bart-large-cnn"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-base_model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(device)
+model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint).to(device)
 
-
-#Summarization Pipeline
 def llm_pipeline(filepath):
     loader = PyPDFLoader(filepath)
     pages = loader.load_and_split()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=50)  #each chunk 400 chars, each chunk will overlap the previous one by 50 characters
-    chunks = text_splitter.split_documents(pages) #splits into small chuncks in each page
 
-    inputs = [chunk.page_content for chunk in chunks]
-    inputs_tokenized = tokenizer(inputs, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    chunks = text_splitter.split_documents(pages)
 
-    summaries = base_model.generate(
-        **inputs_tokenized,
-        max_length=35,
-        min_length=15,
-        num_beams=4
-    )
+    summaries = []
+    for chunk in chunks:
+        input_text = "Summarize the following text: " + chunk.page_content.strip().replace("\n", " ")
+        inputs = tokenizer(
+            input_text,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=1024
+        ).to(device)
 
-    decoded = tokenizer.batch_decode(summaries, skip_special_tokens=True)
-    return " ".join(decoded)
+        output = model.generate(
+            **inputs,
+            max_length=180, 
+            min_length=60,
+            num_beams=4,
+            early_stopping=True
+        )
 
+        summary = tokenizer.decode(output[0], skip_special_tokens=True)
+        summaries.append(summary)
 
-#Display PDF Function
+    
+    return " ".join(summaries)
+    
 @st.cache_data
 def displayPDF(file):
     with open(file, "rb") as f:
@@ -42,11 +50,10 @@ def displayPDF(file):
         pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
         st.markdown(pdf_display, unsafe_allow_html=True)
 
-#Streamlit code
 st.set_page_config(layout="wide", page_title="Summarization App")
 
 def main():
-    st.title("Document Summarization App using Language Model")
+    st.title("Document Summarization App using BART-Large-CNN")
 
     uploaded_file = st.file_uploader("Upload your PDF File", type=["pdf"])
 
@@ -63,7 +70,7 @@ def main():
                 displayPDF(filepath)
 
             with col2:
-                st.info("Summarization is below")
+                st.info("Summarized Content")
                 summary = llm_pipeline(filepath)
                 st.success(summary)
 
