@@ -5,6 +5,8 @@ from langchain.document_loaders import PyPDFLoader
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 import base64
+import PyPDF2
+from io import BytesIO
 
 checkpoint = "facebook/bart-large-cnn"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -40,21 +42,22 @@ def llm_pipeline(filepath):
 
 @st.cache_data
 def displayPDF(file):
+    # Extract text from PDF and display it instead of embedded PDF
     with open(file, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+        pdf_reader = PyPDF2.PdfReader(f)
+        text_content = ""
+        for page_num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[page_num]
+            text_content += f"**Page {page_num + 1}**\n\n"
+            text_content += page.extract_text() + "\n\n"
     
-    # Fixed PDF display with fallback for Chromium blocking
-    pdf_display = f'''
-    <div style="width: 100%; height: 600px;">
-        <object data="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="100%" height="600px">
-            <embed src="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="100%" height="600px">
-                <p>This browser does not support PDFs. Please download the PDF to view it: 
-                <a href="data:application/pdf;base64,{base64_pdf}" download="document.pdf">Download PDF</a></p>
-            </embed>
-        </object>
+    # Display the extracted text in a scrollable container
+    st.markdown(f"""
+    <div style="height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9;">
+        <h4>📄 PDF Content:</h4>
+        <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 12px;">{text_content}</pre>
     </div>
-    '''
-    st.markdown(pdf_display, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 st.set_page_config(layout="wide", page_title="Summarization App")
 
